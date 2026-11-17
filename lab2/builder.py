@@ -24,20 +24,30 @@ class KeyboardBuilder:
         self._accessories[accessory.id] = accessory
         return self
 
-    def build(self) -> Keyboard:
+    def _required_parts(self) -> tuple[Barebone, SwitchPack, KeycapSet]:
         if self._base is None or self._switches is None or self._keycaps is None:
             raise ValueError("Вибери основу, перемикачі та кейкапи")
-        if self._switches.quantity < self._base.key_count:
+        return self._base, self._switches, self._keycaps
+
+    @staticmethod
+    def _validate_parts(
+        base: Barebone, switches: SwitchPack, keycaps: KeycapSet
+    ) -> None:
+        if switches.quantity < base.key_count:
             raise ValueError("Не вистачає перемикачів для обраної основи")
-        if self._keycaps.quantity < self._base.key_count:
+        if keycaps.quantity < base.key_count:
             raise ValueError("Не вистачає кейкапів для обраної основи")
-        if self._base.stem != self._switches.stem or self._base.stem != self._keycaps.stem:
+        if base.stem != switches.stem or base.stem != keycaps.stem:
             raise ValueError("Несумісний тип кріплення")
-        if self._base.layout not in self._keycaps.layouts:
+        if base.layout not in keycaps.layouts:
             raise ValueError("Набір кейкапів не підходить для цієї розкладки")
+
+    def build(self) -> Keyboard:
+        base, switches, keycaps = self._required_parts()
+        self._validate_parts(base, switches, keycaps)
         return Keyboard(
-            base=self._base,
-            switches=self._switches,
-            keycaps=self._keycaps,
+            base=base,
+            switches=switches,
+            keycaps=keycaps,
             accessories=tuple(self._accessories.values()),
         )

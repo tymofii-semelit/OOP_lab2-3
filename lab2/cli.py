@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from decimal import Decimal
 
 from .models import Product, Quote
 from .shop import KeyboardShop
@@ -17,8 +18,18 @@ class ShopCLI:
         self.last_quote: Quote | None = None
 
     @staticmethod
-    def _money(value) -> str:
+    def _money(value: Decimal) -> str:
         return f"{value:.2f} грн"
+
+    @staticmethod
+    def _parse_index(answer: str, count: int) -> int | None:
+        if answer == "0":
+            return 0
+        if answer.isdigit():
+            index = int(answer)
+            if 1 <= index <= count:
+                return index
+        return None
 
     def run(self) -> None:
         while True:
@@ -48,9 +59,15 @@ class ShopCLI:
 
     def show_catalog(self) -> None:
         catalog = self.shop.catalog
+        quantities = {item.quantity for item in catalog.switches}
+        switches_title = (
+            f"Перемикачі (набір із {next(iter(quantities))} шт.)"
+            if len(quantities) == 1
+            else "Перемикачі"
+        )
         for title, products in (
             ("Основи (Barebones)", catalog.barebones),
-            ("Перемикачі (набір із 90 шт.)", catalog.switches),
+            (switches_title, catalog.switches),
             ("Кейкапи", catalog.keycaps),
             ("Аксесуари", catalog.accessories),
         ):
@@ -63,17 +80,18 @@ class ShopCLI:
         for promo in self.shop.catalog.promotions:
             self.write(f"{promo.name} (від {self._money(promo.minimum)})")
 
-    def _choose(self, title: str, products: tuple[Product, ...]):
+    def _choose(self, title: str, products: tuple[Product, ...]) -> Product | None:
         while True:
             self.write(f"\n{title}")
             for index, product in enumerate(products, 1):
                 self.write(f"{index}. {product.name} — {self._money(product.price)}")
             self.write("0. Скасувати")
             answer = self.read("Номер: ").strip()
-            if answer == "0":
+            index = self._parse_index(answer, len(products))
+            if index == 0:
                 return None
-            if answer.isdigit() and 1 <= int(answer) <= len(products):
-                return products[int(answer) - 1]
+            if index is not None:
+                return products[index - 1]
             self.write("Введіть номер із переліку.")
 
     def _select_accessories(self, base_id: str) -> tuple[str, ...]:
@@ -93,10 +111,11 @@ class ShopCLI:
                 mark = " [додано]" if item.id in chosen else ""
                 self.write(f"{index}. {item.name} — {self._money(item.price)}{mark}")
             answer = self.read("Номер: ").strip()
-            if answer == "0":
+            index = self._parse_index(answer, len(accessories))
+            if index == 0:
                 return tuple(chosen)
-            if answer.isdigit() and 1 <= int(answer) <= len(accessories):
-                item = accessories[int(answer) - 1]
+            if index is not None:
+                item = accessories[index - 1]
                 if item.id in chosen:
                     self.write("Цей аксесуар уже доданий.")
                 else:
@@ -104,10 +123,9 @@ class ShopCLI:
             else:
                 self.write("Введіть номер із переліку.")
 
-    def _choose_promotion(self, subtotal) -> str | None:
+    def _choose_promotion(self, subtotal: Decimal) -> str | None:
         available = tuple(
-            promo for promo in self.shop.catalog.promotions
-            if subtotal >= promo.minimum
+            promo for promo in self.shop.catalog.promotions if subtotal >= promo.minimum
         )
         self.write("\nДоступні акції:")
         if not available:
@@ -118,10 +136,11 @@ class ShopCLI:
         self.write("0. Без знижки")
         while True:
             answer = self.read("Номер акції: ").strip()
-            if answer == "0":
+            index = self._parse_index(answer, len(available))
+            if index == 0:
                 return None
-            if answer.isdigit() and 1 <= int(answer) <= len(available):
-                return available[int(answer) - 1].id
+            if index is not None:
+                return available[index - 1].id
             self.write("Введіть номер із переліку.")
 
     def wizard(self) -> None:
@@ -150,8 +169,12 @@ class ShopCLI:
     def show_quote(self, quote: Quote) -> None:
         keyboard = quote.keyboard
         self.write("\n=== ВАША КЛАВІАТУРА ===")
-        for item in (keyboard.base, keyboard.switches, keyboard.keycaps,
-                     *keyboard.accessories):
+        for item in (
+            keyboard.base,
+            keyboard.switches,
+            keyboard.keycaps,
+            *keyboard.accessories,
+        ):
             self.write(f"{item.name}: {self._money(item.price)}")
         self.write(f"Сума: {self._money(quote.subtotal)}")
         if quote.promotion_name:

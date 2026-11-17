@@ -62,30 +62,9 @@ class JsonCatalogRepository:
     def load(self) -> Catalog:
         try:
             raw = json.loads(self.path.read_text(encoding="utf-8"))
-            groups = {
-                name: tuple(factory.create(item) for item in raw[name])
-                for name, factory in self.FACTORIES.items()
-            }
-            for name, items in groups.items():
-                ids = [item.id for item in items]
-                if len(set(ids)) != len(ids):
-                    raise CatalogError(f"Повторюються ID в розділі {name}")
-            promotions = tuple(
-                Promotion(
-                    id=str(item["id"]),
-                    name=str(item["name"]),
-                    kind=str(item["type"]),
-                    value=Decimal(str(item["value"])),
-                    minimum=Decimal(str(item["minimum"])),
-                )
-                for item in raw["promotions"]
-            )
-            if len({p.id for p in promotions}) != len(promotions):
-                raise CatalogError("Повторюються ID акцій")
-            recommendations = {
-                str(base_id): tuple(ids)
-                for base_id, ids in raw["recommendations"].items()
-            }
+            groups = self._load_products(raw)
+            promotions = self._load_promotions(raw)
+            recommendations = self._load_recommendations(raw)
             catalog = Catalog(
                 **groups,
                 promotions=promotions,
@@ -93,11 +72,52 @@ class JsonCatalogRepository:
             )
             self._validate(catalog)
             return catalog
-        except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError,
-                InvalidOperation) as error:
+        except (
+            OSError,
+            json.JSONDecodeError,
+            KeyError,
+            TypeError,
+            ValueError,
+            InvalidOperation,
+        ) as error:
             if isinstance(error, CatalogError):
                 raise
             raise CatalogError(f"Помилка завантаження каталогу: {error}") from error
+
+    @staticmethod
+    def _check_unique_ids(items: tuple, message: str) -> None:
+        identifiers = [item.id for item in items]
+        if len(set(identifiers)) != len(identifiers):
+            raise CatalogError(message)
+
+    def _load_products(self, raw: dict) -> dict:
+        groups = {
+            name: tuple(factory.create(item) for item in raw[name])
+            for name, factory in self.FACTORIES.items()
+        }
+        for name, items in groups.items():
+            self._check_unique_ids(items, f"Повторюються ID в розділі {name}")
+        return groups
+
+    def _load_promotions(self, raw: dict) -> tuple[Promotion, ...]:
+        promotions = tuple(
+            Promotion(
+                id=str(item["id"]),
+                name=str(item["name"]),
+                kind=str(item["type"]),
+                value=Decimal(str(item["value"])),
+                minimum=Decimal(str(item["minimum"])),
+            )
+            for item in raw["promotions"]
+        )
+        self._check_unique_ids(promotions, "Повторюються ID акцій")
+        return promotions
+
+    @staticmethod
+    def _load_recommendations(raw: dict) -> dict[str, tuple[str, ...]]:
+        return {
+            str(base_id): tuple(ids) for base_id, ids in raw["recommendations"].items()
+        }
 
     @staticmethod
     def _validate(catalog: Catalog) -> None:
