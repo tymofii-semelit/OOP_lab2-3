@@ -1,0 +1,124 @@
+{
+  "barebones": [
+    {
+      "id": "bb60",
+      "name": "lab2 Compact 60%",
+      "price": "1450.00",
+      "layout": "60%",
+      "key_count": 61,
+      "stem": "mx",
+      "description": "Компактна основа з hot-swap PCB і стабілізаторами"
+    },
+    {
+      "id": "bb75",
+      "name": "lab2 Everyday 75%",
+      "price": "1850.00",
+      "layout": "75%",
+      "key_count": 82,
+      "stem": "mx",
+      "description": "Основа з функціональним рядом і стрілками"
+    },
+    {
+      "id": "bbtkl",
+      "name": "lab2 TKL",
+      "price": "2200.00",
+      "layout": "TKL",
+      "key_count": 87,
+      "stem": "mx",
+      "description": "Основа без цифрового блоку"
+    }
+  ],
+  "switches": [
+    {
+      "id": "sw_linear",
+      "name": "Linear Red, набір 90 шт.",
+      "price": "620.00",
+      "quantity": 90,
+      "stem": "mx",
+      "feel": "Лінійні"
+    },
+    {
+      "id": "sw_tactile",
+      "name": "Tactile Brown, набір 90 шт.",
+      "price": "750.00",
+      "quantity": 90,
+      "stem": "mx",
+      "feel": "Тактильні"
+    },
+    {
+      "id": "sw_clicky",
+      "name": "Clicky Blue, набір 90 шт.",
+      "price": "690.00",
+      "quantity": 90,
+      "stem": "mx",
+      "feel": "Клікаючі"
+    }
+  ],
+  "keycaps": [
+    {
+      "id": "kc_abs",
+      "name": "ABS Black, набір 110 шт.",
+      "price": "340.00",
+      "quantity": 110,
+      "stem": "mx",
+      "material": "ABS",
+      "layouts": ["60%", "75%", "TKL"]
+    },
+    {
+      "id": "kc_pbt",
+      "name": "PBT White, набір 110 шт.",
+      "price": "570.00",
+      "quantity": 110,
+      "stem": "mx",
+      "material": "PBT",
+      "layouts": ["60%", "75%", "TKL"]
+    },
+    {
+      "id": "kc_retro",
+      "name": "PBT Retro, набір 140 шт.",
+      "price": "790.00",
+      "quantity": 140,
+      "stem": "mx",
+      "material": "PBT",
+      "layouts": ["60%", "75%", "TKL"]
+    }
+  ],
+  "accessories": [
+    {
+      "id": "puller",
+      "name": "Знімач кейкапів і перемикачів",
+      "price": "120.00"
+    },
+    {
+      "id": "wrist_rest",
+      "name": "Підставка під зап'ястя",
+      "price": "280.00"
+    },
+    {
+      "id": "cable",
+      "name": "Кручений USB-C кабель",
+      "price": "390.00"
+    }
+  ],
+  "promotions": [
+    {
+      "id": "welcome10",
+      "name": "-10% на замовлення від 2500 грн",
+      "type": "percent",
+      "value": "10",
+      "minimum": "2500.00"
+    },
+    {
+      "id": "minus200",
+      "name": "-200 грн на замовлення від 3200 грн",
+      "type": "fixed",
+      "value": "200.00",
+      "minimum": "3200.00"
+    }
+  ],
+  "recommendations": {
+    "bb60": ["puller", "cable"],
+    "bb75": ["wrist_rest", "puller"],
+    "bbtkl": ["wrist_rest", "cable"]
+  }
+}
